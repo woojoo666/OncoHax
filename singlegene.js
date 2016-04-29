@@ -2,31 +2,38 @@
 	var origCallback = singleGeneVisualization._refreshCallback;
 	singleGeneVisualization._refreshCallback = function (component, url) {
 
-		var target = j$(component._targetId);
-		var map = target.html().match('<map.*?>(.*)</map>')[1];
-
-		var formats = {};
-		var maxfeatures = 0;
-
-		var data = [];
-		var filename = 'export.csv';
+		var filename = j$('#tVisualizationTitle').text() + '.csv';
 		var linkstyle = { padding: 10, margin: 10, border: '1px solid lightgrey' };
 
-		map.replace(/<area.*?leftcontent="(.*?)".*?rightcontent="(.*?)"/g, function (match, left, right) {
-			if (!formats[left]) { 
-				formats[left] = [];
-				maxfeatures = Math.max(maxfeatures, left.split('||').length);
-			}
-			formats[left].push(right);
-		});
+		function extractdata (html) {
 
-		for (var key in formats) {
-			data.push([]);
-			data.push(key.split('||'));
-			formats[key].forEach(function (row) { data.push(row.split('||')); });
+			var map = html.match('<map.*?>(.*)</map>')[1];
+
+			var formats = {};
+			var maxfeatures = 0;
+
+			var data = [];
+
+			map.replace(/<area.*?leftcontent="(.*?)".*?rightcontent="(.*?)"/g, function (match, left, right) {
+				if (!formats[left]) { 
+					formats[left] = [];
+					maxfeatures = Math.max(maxfeatures, left.split('||').length);
+				}
+				formats[left].push(right);
+			});
+
+			for (var key in formats) {
+				data.push([]);
+				data.push(key.split('||'));
+				formats[key].forEach(function (row) { data.push(row.split('||')); });
+			}
+			return data;
 		}
 
+		var target = j$(component._targetId);
 		target.append('<br>');
+
+		var data = extractdata(target.html());
 
 		// CSV export adapted from http://jsfiddle.net/terryyounghk/KPEGU/
 		var exportbutton = j$('<a>Export</a>').css(linkstyle).click(function(event) {
