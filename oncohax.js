@@ -92,7 +92,7 @@
 				var allGenes = j$('#pListSelectorPane').find('td.fDataset');
 
 				var zip = new JSZip();
-				var foldername = "folder";
+				var foldername = "OncomineExport";
 				var folder = zip.folder(foldername);
 
 				var oldBuildUri = buildNewUriForEvent;
@@ -100,7 +100,7 @@
 				function finish() {
 					zip.generateAsync({type:"blob"})
 					.then(function(blob) {
-						saveAs(blob, "hello.zip");
+						saveAs(blob, "OncomineExport.zip");
 					});
 
 					buildNewUriForEvent = oldBuildUri;
