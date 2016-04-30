@@ -149,6 +149,7 @@
 					if (index >= allGenes.length) return finish();
 
 					currentGene = allGenes.eq(index);
+					console.log(currentGene.parent().siblings('.pListSelectorItem').length);
 					continuation = downloadAll.bind(null, index+1);
 					buildEventUriForSelection("viewDataset", currentGene, 
 									[pMap.detailType, 
@@ -158,5 +159,41 @@
 			});
 			j$('#pContent').append(downloadAllButton);
 		});
+	});
+
+	// copied from datasetListSelectorComponent.js
+	function getUriFragmentAdjustedForCurrentAnalysisComparisons() {
+		var modifiedUriFragment = decodeURIComponent(Oncomine.currentUriFragment);
+		var newAnalysisComparisonStatelet = "ac:" + Oncomine.analysisComparisons.join(",")+";";
+		if (modifiedUriFragment.indexOf("ac:") > -1) {
+			modifiedUriFragment = modifiedUriFragment.replace(/ac:.*?;/,newAnalysisComparisonStatelet);
+		} else {
+			modifiedUriFragment = newAnalysisComparisonStatelet + modifiedUriFragment;
+		}
+		return modifiedUriFragment;
+	}
+
+	// copied from datasetListSelectorComponent.js
+	function lazyLoadDataset($parentCell) {
+		var datasetId= $parentCell.attr("om4:datasetId");
+		var modifiedUriFragment = getUriFragmentAdjustedForCurrentAnalysisComparisons();
+
+		j$.ajax({
+			url: "/resource/ui/component/datasetLazyLoad.html?component=datasetExpand:" + datasetId + ";" + modifiedUriFragment,
+			type: 'GET',
+			success: function(html) {
+				console.log(datasetId + '---------------------------------------');
+				j$(html).find('.pListSelectorItem').find('td.fAnalysis').each(function (i, subitem) {
+					subitem = j$(subitem);
+					var pval = subitem.find('.pPValue').text().split(/\s*=\s*/)[1];
+					var fold = subitem.find('.pFoldChange').text().split(/\s*=\s*/)[1];
+					console.log(pval);
+				});
+			}
+		});
+	}
+
+	j$('#pListSelectorPane').find('td.fDataset').each(function (i, gene) {
+		lazyLoadDataset(j$(gene));
 	});
 })()
