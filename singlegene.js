@@ -105,7 +105,12 @@
 
 			buildNewUriForEvent = function (action, eventUri, sourceComponent) {
 
-				var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+Oncomine.currentUriFragment;
+				var baseUri = Oncomine.currentUriFragment;
+				eventUri.split(';').forEach(function (prop) {
+					var keyval = prop.split(':');
+					baseUri = baseUri.replace(new RegExp('(^|;)('+keyval[0]+':).*?(;|$)'),'$1$2'+keyval[1]+'$3');
+				});
+				var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+baseUri;
 
 				Oncomine.Ajax.getHTML({
 					url: url,
@@ -129,6 +134,8 @@
 
 			(function downloadAll(index) {
 				if (index >= allGenes.length) return finish();
+
+"d:971;dso:geneOverex;dt:dataset;ec:[2];epv:150001.151078,2937,3508;et:over;f:536886;g:6389;p:75644307;pg:1;pvf:3066,34607,150004;scr:datasets;ss:all;v:18"
 
 				currentGene = allGenes.eq(index);
 				continuation = downloadAll.bind(null, index+1);
