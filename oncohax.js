@@ -108,6 +108,7 @@
 
 				var continuation;
 				var currentGene;
+				var currentGeneName;
 
 				buildNewUriForEvent = function (action, eventUri, sourceComponent) {
 
@@ -134,9 +135,11 @@
 							complete: function(request, status) {
 								if (status == "success") {
 									var data = extractdata(request.responseText);
-									var csv = toCSV(data);
-									folder.file(currentGene.find('b').text() + '.csv', csv);
-									continuation();
+									lazyLoadDataset(currentGene, data, function () {
+										var csv = toCSV(data);
+										folder.file(currentGeneName + '.csv', csv);
+										continuation();
+									});
 								}
 							}
 						});
@@ -149,7 +152,8 @@
 					if (index >= allGenes.length) return finish();
 
 					currentGene = allGenes.eq(index);
-					console.log(currentGene.parent().siblings('.pListSelectorItem').length);
+					currentGeneName = currentGene.find('b').text();
+					console.log('retrieving data for ' + currentGeneName + '...');
 					continuation = downloadAll.bind(null, index+1);
 					buildEventUriForSelection("viewDataset", currentGene, 
 									[pMap.detailType, 
@@ -173,8 +177,8 @@
 		return modifiedUriFragment;
 	}
 
-	// copied from datasetListSelectorComponent.js
-	function lazyLoadDataset($parentCell) {
+	// copied and adapted from datasetListSelectorComponent.js
+	function lazyLoadDataset($parentCell, data, callback) {
 		var datasetId= $parentCell.attr("om4:datasetId");
 		var modifiedUriFragment = getUriFragmentAdjustedForCurrentAnalysisComparisons();
 
@@ -182,18 +186,18 @@
 			url: "/resource/ui/component/datasetLazyLoad.html?component=datasetExpand:" + datasetId + ";" + modifiedUriFragment,
 			type: 'GET',
 			success: function(html) {
-				console.log(datasetId + '---------------------------------------');
+				data.push([]);
+				data.push(['analysis','p','fold change']);
 				j$(html).find('.pListSelectorItem').find('td.fAnalysis').each(function (i, subitem) {
 					subitem = j$(subitem);
+					var analysis = subitem.children().eq(0).text();
 					var pval = subitem.find('.pPValue').text().split(/\s*=\s*/)[1];
 					var fold = subitem.find('.pFoldChange').text().split(/\s*=\s*/)[1];
-					console.log(pval);
+					data.push([analysis,pval,fold]);
 				});
+				callback();
 			}
 		});
 	}
 
-	j$('#pListSelectorPane').find('td.fDataset').each(function (i, gene) {
-		lazyLoadDataset(j$(gene));
-	});
 })()
