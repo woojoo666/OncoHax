@@ -49,7 +49,21 @@
 			// Data URI
 			csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
 
-			j$(this).attr({ download: filename, href: csvData, target: '_blank' });
+			var self = this;
+
+			j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.0.0/jszip.js", function() {
+				var zip = new JSZip();
+				var foldername = "folder";
+				var folder = zip.folder(foldername);
+				folder.file(filename, csv);
+				zip.generateAsync({type:"base64"})
+				.then(function(base64) {
+					console.log(base64);
+					j$(self).attr({ download: "example.zip", href: "data:application/zip;base64,"+base64, target: '_blank' });
+				});
+			});
+
+			//j$(this).attr({ download: filename, href: csvData, target: '_blank' });
 		});
 		target.append(exportbutton);
 
