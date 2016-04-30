@@ -52,7 +52,7 @@
 			var self = this;
 
 			j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.0.0/jszip.js", function() {
-				j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.js"), function () {
+				j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.js", function () {
 					var zip = new JSZip();
 					var foldername = "folder";
 					var folder = zip.folder(foldername);
@@ -61,7 +61,7 @@
 					.then(function(blob) {
 						saveAs(blob, "hello.zip");
 					});
-				}
+				});
 			});
 
 			//j$(this).attr({ download: filename, href: csvData, target: '_blank' });
@@ -92,4 +92,33 @@
 
 		origCallback.apply(this, arguments);
 	}
+
+	var allGenes = j$('#pListSelectorPane').find('td.fDataset');
+	var first = allGenes.eq(0)
+	console.log(first);
+
+	var oldBuildUri = buildNewUriForEvent;
+	buildNewUriForEvent = function (action, eventUri, sourceComponent) {
+
+		var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+Oncomine.currentUriFragment;
+
+		Oncomine.Ajax.getHTML({
+			url: url,
+			timeout: 60000,
+			error: function(request, textStatus, errorThrown) {
+				console.log(textStatus);
+			},
+			complete: function(request, status) {
+				if (status == "success") {
+					console.log(request.responseText);
+				}
+			}
+		});
+	}
+
+	var pMap = Oncomine.Util.PARAMETER_MAP;
+	buildEventUriForSelection("viewDataset", first, 
+					[pMap.detailType, 
+					 pMap.datasetId,
+					 pMap.defaultProperty], "datasetListSelector");
 })()
