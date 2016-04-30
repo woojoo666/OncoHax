@@ -105,28 +105,37 @@
 
 			buildNewUriForEvent = function (action, eventUri, sourceComponent) {
 
-				var baseUri = Oncomine.currentUriFragment;
-				eventUri.split(';').forEach(function (prop) {
-					var keyval = prop.split(':');
-					baseUri = baseUri.replace(new RegExp('(^|;)('+keyval[0]+':).*?(;|$)'),'$1$2'+keyval[1]+'$3');
-				});
-				var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+baseUri;
+				var analysisComparisons = "ac:" + Oncomine.analysisComparisons.join(",") + ";";
+				var conceptComparisons = Oncomine.ConceptListSelector.conceptComparisons;
+				var conceptComparisonsValue = conceptComparisons.length === 0 ? "" : ("cc:" + conceptComparisons.join(",") + ";");
+				var expandedCategoryIds = "ec:[" + getExpandedCategories().join(",") + "];";
+				var expandedProperties = "epv:" + getExpandedProperties().join(",") + ";";
+				var request= "ui/action.html?eventValues=cmd:" + action + ";" + analysisComparisons + conceptComparisonsValue 
+					+ expandedCategoryIds + expandedProperties + eventUri + "&original=g:6389;v:18"
+				console.log(request);
 
-				Oncomine.Ajax.getHTML({
-					url: url,
-					timeout: 60000,
-					error: function(request, textStatus, errorThrown) {
-						console.log(textStatus);
-					},
-					complete: function(request, status) {
-						if (status == "success") {
-							console.log(url);
-							var data = extractdata(request.responseText);
-							var csv = toCSV(data);
-							folder.file(currentGene.find('b').text() + '.csv', csv);
-							continuation();
-						}
-					}
+				Oncomine.Ajax.getJSON(request, function(jsonResponse) {
+					var newUriFragment = jsonResponse["uriFragment"];
+					console.log(newUriFragment);
+
+					// var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+newUriFragment;
+
+					// Oncomine.Ajax.getHTML({
+					// 	url: url,
+					// 	timeout: 60000,
+					// 	error: function(request, textStatus, errorThrown) {
+					// 		console.log(textStatus);
+					// 	},
+					// 	complete: function(request, status) {
+					// 		if (status == "success") {
+					// 			console.log(url);
+					// 			var data = extractdata(request.responseText);
+					// 			var csv = toCSV(data);
+					// 			folder.file(currentGene.find('b').text() + '.csv', csv);
+					// 			continuation();
+					// 		}
+					// 	}
+					// });
 				});
 			}
 
@@ -134,8 +143,6 @@
 
 			(function downloadAll(index) {
 				if (index >= allGenes.length) return finish();
-
-"d:971;dso:geneOverex;dt:dataset;ec:[2];epv:150001.151078,2937,3508;et:over;f:536886;g:6389;p:75644307;pg:1;pvf:3066,34607,150004;scr:datasets;ss:all;v:18"
 
 				currentGene = allGenes.eq(index);
 				continuation = downloadAll.bind(null, index+1);
