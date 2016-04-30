@@ -87,6 +87,7 @@
 	j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.0.0/jszip.js", function() {
 		j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.js", function () {
 
+			var downloadStatus = j$('<p/>');
 			var downloadAllButton = j$('<button>Download All</button>').click(function () {
 
 				var allGenes = j$('#pListSelectorPane').find('td.fDataset');
@@ -98,6 +99,7 @@
 				var oldBuildUri = buildNewUriForEvent;
 
 				function finish() {
+					downloadStatus.text("finished!");
 					zip.generateAsync({type:"blob"})
 					.then(function(blob) {
 						saveAs(blob, "OncomineExport.zip");
@@ -153,7 +155,7 @@
 
 					currentGene = allGenes.eq(index);
 					currentGeneName = currentGene.find('b').text();
-					console.log('retrieving data for ' + currentGeneName + '...');
+					downloadStatus.text('retrieving data for ' + currentGeneName + '...');
 					continuation = downloadAll.bind(null, index+1);
 					buildEventUriForSelection("viewDataset", currentGene, 
 									[pMap.detailType, 
@@ -161,7 +163,7 @@
 									 pMap.defaultProperty], "datasetListSelector");
 				})(0);
 			});
-			j$('#pContent').append(downloadAllButton);
+			j$('#pContent').append(downloadAllButton).append(downloadStatus);
 		});
 	});
 
