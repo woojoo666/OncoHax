@@ -83,71 +83,75 @@
 	j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.0.0/jszip.js", function() {
 		j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.js", function () {
 
-			var allGenes = j$('#pListSelectorPane').find('td.fDataset');
+			var downloadAllButton = j$('<button>Download All</button>').click(function () {
 
-			var zip = new JSZip();
-			var foldername = "folder";
-			var folder = zip.folder(foldername);
+				var allGenes = j$('#pListSelectorPane').find('td.fDataset');
 
-			var oldBuildUri = buildNewUriForEvent;
+				var zip = new JSZip();
+				var foldername = "folder";
+				var folder = zip.folder(foldername);
 
-			function finish() {
-				zip.generateAsync({type:"blob"})
-				.then(function(blob) {
-					saveAs(blob, "hello.zip");
-				});
+				var oldBuildUri = buildNewUriForEvent;
 
-				buildNewUriForEvent = oldBuildUri;
-			}
-
-			var continuation;
-			var currentGene;
-
-			buildNewUriForEvent = function (action, eventUri, sourceComponent) {
-
-				var analysisComparisons = "ac:" + Oncomine.analysisComparisons.join(",") + ";";
-				var conceptComparisons = Oncomine.ConceptListSelector.conceptComparisons;
-				var conceptComparisonsValue = conceptComparisons.length === 0 ? "" : ("cc:" + conceptComparisons.join(",") + ";");
-				var expandedCategoryIds = "ec:[" + getExpandedCategories().join(",") + "];";
-				var expandedProperties = "epv:" + getExpandedProperties().join(",") + ";";
-				var request= "ui/action.html?eventValues=cmd:" + action + ";" + analysisComparisons + conceptComparisonsValue 
-					+ expandedCategoryIds + expandedProperties + eventUri + "&original=g:6389;v:18";
-
-				Oncomine.Ajax.getJSON(request, function(jsonResponse) {
-					var newUriFragment = jsonResponse["uriFragment"];
-
-					var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+newUriFragment;
-
-					Oncomine.Ajax.getHTML({
-						url: url,
-						timeout: 60000,
-						error: function(request, textStatus, errorThrown) {
-							console.log(textStatus);
-						},
-						complete: function(request, status) {
-							if (status == "success") {
-								var data = extractdata(request.responseText);
-								var csv = toCSV(data);
-								folder.file(currentGene.find('b').text() + '.csv', csv);
-								continuation();
-							}
-						}
+				function finish() {
+					zip.generateAsync({type:"blob"})
+					.then(function(blob) {
+						saveAs(blob, "hello.zip");
 					});
-				});
-			}
 
-			var pMap = Oncomine.Util.PARAMETER_MAP;
+					buildNewUriForEvent = oldBuildUri;
+				}
 
-			(function downloadAll(index) {
-				if (index >= allGenes.length) return finish();
+				var continuation;
+				var currentGene;
 
-				currentGene = allGenes.eq(index);
-				continuation = downloadAll.bind(null, index+1);
-				buildEventUriForSelection("viewDataset", currentGene, 
-								[pMap.detailType, 
-								 pMap.datasetId,
-								 pMap.defaultProperty], "datasetListSelector");
-			})(0);
+				buildNewUriForEvent = function (action, eventUri, sourceComponent) {
+
+					var analysisComparisons = "ac:" + Oncomine.analysisComparisons.join(",") + ";";
+					var conceptComparisons = Oncomine.ConceptListSelector.conceptComparisons;
+					var conceptComparisonsValue = conceptComparisons.length === 0 ? "" : ("cc:" + conceptComparisons.join(",") + ";");
+					var expandedCategoryIds = "ec:[" + getExpandedCategories().join(",") + "];";
+					var expandedProperties = "epv:" + getExpandedProperties().join(",") + ";";
+					var request= "ui/action.html?eventValues=cmd:" + action + ";" + analysisComparisons + conceptComparisonsValue 
+						+ expandedCategoryIds + expandedProperties + eventUri + "&original=g:6389;v:18";
+
+					Oncomine.Ajax.getJSON(request, function(jsonResponse) {
+						var newUriFragment = jsonResponse["uriFragment"];
+
+						var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+newUriFragment;
+
+						Oncomine.Ajax.getHTML({
+							url: url,
+							timeout: 60000,
+							error: function(request, textStatus, errorThrown) {
+								console.log(textStatus);
+							},
+							complete: function(request, status) {
+								if (status == "success") {
+									var data = extractdata(request.responseText);
+									var csv = toCSV(data);
+									folder.file(currentGene.find('b').text() + '.csv', csv);
+									continuation();
+								}
+							}
+						});
+					});
+				}
+
+				var pMap = Oncomine.Util.PARAMETER_MAP;
+
+				(function downloadAll(index) {
+					if (index >= allGenes.length) return finish();
+
+					currentGene = allGenes.eq(index);
+					continuation = downloadAll.bind(null, index+1);
+					buildEventUriForSelection("viewDataset", currentGene, 
+									[pMap.detailType, 
+									 pMap.datasetId,
+									 pMap.defaultProperty], "datasetListSelector");
+				})(0);
+			});
+			j$('#pContent').append(downloadAllButton);
 		});
 	});
 })()
