@@ -116,8 +116,9 @@
 					var conceptComparisonsValue = conceptComparisons.length === 0 ? "" : ("cc:" + conceptComparisons.join(",") + ";");
 					var expandedCategoryIds = "ec:[" + getExpandedCategories().join(",") + "];";
 					var expandedProperties = "epv:" + getExpandedProperties().join(",") + ";";
+					var g = Oncomine.currentUriFragment.match(/;g:(.*?);/)[1];
 					var request= "ui/action.html?eventValues=cmd:" + action + ";" + analysisComparisons + conceptComparisonsValue 
-						+ expandedCategoryIds + expandedProperties + eventUri + "&original=g:6389;v:18";
+						+ expandedCategoryIds + expandedProperties + eventUri + "&original=g:"+g+";v:18";
 
 					Oncomine.Ajax.getJSON(request, function(jsonResponse) {
 						var newUriFragment = jsonResponse["uriFragment"];
