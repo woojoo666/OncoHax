@@ -34,6 +34,8 @@
 			}).join(rowDelim) + '"';
 	}
 
+/*************************** Single Gene Download **********************************/
+
 	var origCallback = singleGeneVisualization._refreshCallback;
 	singleGeneVisualization._refreshCallback = function (component, url) {
 
@@ -79,6 +81,8 @@
 
 		origCallback.apply(this, arguments);
 	}
+
+/************************* Download All Genes in Selector Pane **********************/
 
 	j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.0.0/jszip.js", function() {
 		j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.js", function () {
