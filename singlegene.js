@@ -9,7 +9,7 @@
 
 		var data = [];
 
-		map.replace(/<area.*?leftcontent="(.*?)".*?rightcontent="(.*?)"/g, function (match, left, right) {
+		map.replace(/<area.*?leftcontent="(.*?)".*?rightcontent="(.*?)"/gi, function (match, left, right) {
 			if (!formats[left]) { 
 				formats[left] = [];
 				maxfeatures = Math.max(maxfeatures, left.split('||').length);
@@ -80,47 +80,57 @@
 		origCallback.apply(this, arguments);
 	}
 
-	var allGenes = j$('#pListSelectorPane').find('td.fDataset');
-	var first = allGenes.eq(0)
-	console.log(first);
+	j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.0.0/jszip.js", function() {
+		j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.js", function () {
 
-	var oldBuildUri = buildNewUriForEvent;
-	buildNewUriForEvent = function (action, eventUri, sourceComponent) {
+			var allGenes = j$('#pListSelectorPane').find('td.fDataset');
+			var first = allGenes.eq(0)
+			console.log(first);
 
-		var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+Oncomine.currentUriFragment;
+			var zip = new JSZip();
+			var foldername = "folder";
+			var folder = zip.folder(foldername);
 
-		Oncomine.Ajax.getHTML({
-			url: url,
-			timeout: 60000,
-			error: function(request, textStatus, errorThrown) {
-				console.log(textStatus);
-			},
-			complete: function(request, status) {
-				if (status == "success") {
-					console.log(request.responseText);
-				}
-			}
-		});
-	}
+			var filename = first.find('b').text() + '.csv';
 
-	var pMap = Oncomine.Util.PARAMETER_MAP;
-	buildEventUriForSelection("viewDataset", first, 
-					[pMap.detailType, 
-					 pMap.datasetId,
-					 pMap.defaultProperty], "datasetListSelector");
-/*
-			j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.0.0/jszip.js", function() {
-				j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.js", function () {
-					var zip = new JSZip();
-					var foldername = "folder";
-					var folder = zip.folder(foldername);
-					folder.file(filename, csv);
-					zip.generateAsync({type:"blob"})
-					.then(function(blob) {
-						saveAs(blob, "hello.zip");
-					});
+			var oldBuildUri = buildNewUriForEvent;
+
+			function finish() {
+				zip.generateAsync({type:"blob"})
+				.then(function(blob) {
+					saveAs(blob, "hello.zip");
 				});
-			});
-*/
-	buildNewUriForEvent = oldBuildUri;
+
+				buildNewUriForEvent = oldBuildUri;
+			}
+
+			buildNewUriForEvent = function (action, eventUri, sourceComponent) {
+
+				var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+Oncomine.currentUriFragment;
+
+				Oncomine.Ajax.getHTML({
+					url: url,
+					timeout: 60000,
+					error: function(request, textStatus, errorThrown) {
+						console.log(textStatus);
+					},
+					complete: function(request, status) {
+						if (status == "success") {
+							var data = extractdata(request.responseText);
+							var csv = toCSV(data);
+							folder.file(filename, csv);
+							finish();
+						}
+					}
+				});
+			}
+
+			var pMap = Oncomine.Util.PARAMETER_MAP;
+			buildEventUriForSelection("viewDataset", first, 
+							[pMap.detailType, 
+							 pMap.datasetId,
+							 pMap.defaultProperty], "datasetListSelector");
+
+		});
+	});
 })()
