@@ -1,34 +1,44 @@
 (function() {
+
+	function extractdata (html) {
+
+		var map = html.match('<map.*?>(.*)</map>')[1];
+
+		var formats = {};
+		var maxfeatures = 0;
+
+		var data = [];
+
+		map.replace(/<area.*?leftcontent="(.*?)".*?rightcontent="(.*?)"/g, function (match, left, right) {
+			if (!formats[left]) { 
+				formats[left] = [];
+				maxfeatures = Math.max(maxfeatures, left.split('||').length);
+			}
+			formats[left].push(right);
+		});
+
+		for (var key in formats) {
+			data.push([]);
+			data.push(key.split('||'));
+			formats[key].forEach(function (row) { data.push(row.split('||')); });
+		}
+		return data;
+	}
+
+	function toCSV (data) {
+			var colDelim = '","', rowDelim = '"\r\n"';
+			return '"' + data.map(function(row) {
+				return row.map(function(cell) {
+					return ('' + cell).replace(/"/g, '""'); // escape double quotes
+				}).join(colDelim);
+			}).join(rowDelim) + '"';
+	}
+
 	var origCallback = singleGeneVisualization._refreshCallback;
 	singleGeneVisualization._refreshCallback = function (component, url) {
 
 		var filename = j$('#tVisualizationTitle').text() + '.csv';
 		var linkstyle = { padding: 10, margin: 10, border: '1px solid lightgrey' };
-
-		function extractdata (html) {
-
-			var map = html.match('<map.*?>(.*)</map>')[1];
-
-			var formats = {};
-			var maxfeatures = 0;
-
-			var data = [];
-
-			map.replace(/<area.*?leftcontent="(.*?)".*?rightcontent="(.*?)"/g, function (match, left, right) {
-				if (!formats[left]) { 
-					formats[left] = [];
-					maxfeatures = Math.max(maxfeatures, left.split('||').length);
-				}
-				formats[left].push(right);
-			});
-
-			for (var key in formats) {
-				data.push([]);
-				data.push(key.split('||'));
-				formats[key].forEach(function (row) { data.push(row.split('||')); });
-			}
-			return data;
-		}
 
 		var target = j$(component._targetId);
 		target.append('<br>');
@@ -37,34 +47,11 @@
 
 		// CSV export adapted from http://jsfiddle.net/terryyounghk/KPEGU/
 		var exportbutton = j$('<a>Export</a>').css(linkstyle).click(function(event) {
-			var colDelim = '","', rowDelim = '"\r\n"',
-
-			// convert data to csv format
-			csv = '"' + data.map(function(row) {
-				return row.map(function(cell) {
-					return ('' + cell).replace(/"/g, '""'); // escape double quotes
-				}).join(colDelim);
-			}).join(rowDelim) + '"',
 
 			// Data URI
-			csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+			csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(toCSV(data));
 
-			var self = this;
-
-			j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.0.0/jszip.js", function() {
-				j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.js", function () {
-					var zip = new JSZip();
-					var foldername = "folder";
-					var folder = zip.folder(foldername);
-					folder.file(filename, csv);
-					zip.generateAsync({type:"blob"})
-					.then(function(blob) {
-						saveAs(blob, "hello.zip");
-					});
-				});
-			});
-
-			//j$(this).attr({ download: filename, href: csvData, target: '_blank' });
+			j$(this).attr({ download: filename, href: csvData, target: '_blank' });
 		});
 		target.append(exportbutton);
 
@@ -121,4 +108,19 @@
 					[pMap.detailType, 
 					 pMap.datasetId,
 					 pMap.defaultProperty], "datasetListSelector");
+/*
+			j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.0.0/jszip.js", function() {
+				j$.getScript("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2014-11-29/FileSaver.js", function () {
+					var zip = new JSZip();
+					var foldername = "folder";
+					var folder = zip.folder(foldername);
+					folder.file(filename, csv);
+					zip.generateAsync({type:"blob"})
+					.then(function(blob) {
+						saveAs(blob, "hello.zip");
+					});
+				});
+			});
+*/
+	buildNewUriForEvent = oldBuildUri;
 })()
