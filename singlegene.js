@@ -111,31 +111,28 @@
 				var expandedCategoryIds = "ec:[" + getExpandedCategories().join(",") + "];";
 				var expandedProperties = "epv:" + getExpandedProperties().join(",") + ";";
 				var request= "ui/action.html?eventValues=cmd:" + action + ";" + analysisComparisons + conceptComparisonsValue 
-					+ expandedCategoryIds + expandedProperties + eventUri + "&original=g:6389;v:18"
-				console.log(request);
+					+ expandedCategoryIds + expandedProperties + eventUri + "&original=g:6389;v:18";
 
 				Oncomine.Ajax.getJSON(request, function(jsonResponse) {
 					var newUriFragment = jsonResponse["uriFragment"];
-					console.log(newUriFragment);
 
-					// var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+newUriFragment;
+					var url= "https://www.oncomine.org/resource/ui/component/singleGene.html?component="+newUriFragment;
 
-					// Oncomine.Ajax.getHTML({
-					// 	url: url,
-					// 	timeout: 60000,
-					// 	error: function(request, textStatus, errorThrown) {
-					// 		console.log(textStatus);
-					// 	},
-					// 	complete: function(request, status) {
-					// 		if (status == "success") {
-					// 			console.log(url);
-					// 			var data = extractdata(request.responseText);
-					// 			var csv = toCSV(data);
-					// 			folder.file(currentGene.find('b').text() + '.csv', csv);
-					// 			continuation();
-					// 		}
-					// 	}
-					// });
+					Oncomine.Ajax.getHTML({
+						url: url,
+						timeout: 60000,
+						error: function(request, textStatus, errorThrown) {
+							console.log(textStatus);
+						},
+						complete: function(request, status) {
+							if (status == "success") {
+								var data = extractdata(request.responseText);
+								var csv = toCSV(data);
+								folder.file(currentGene.find('b').text() + '.csv', csv);
+								continuation();
+							}
+						}
+					});
 				});
 			}
 
