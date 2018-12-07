@@ -1,5 +1,5 @@
 (function () {
 	var script = document.createElement('script');
-	script.src = "https://rawgit.com/woojoo666/OncoHax/master/oncohax.js";
+	script.src = "https://cdn.jsdelivr.net/gh/woojoo666/OncoHax/oncohax.js";
 	document.body.appendChild(script);
 })()
